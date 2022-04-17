@@ -1,0 +1,142 @@
+version: "3.9"
+
+services:
+  web:
+    container_name: django
+    restart: always
+    image: nesqui/django-app:latest
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DEBUG=${DEBUG}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
+      - DB_HOST=${DB_HOST}
+      - DJANGO_SUPERUSER_USERNAME=${SUPERUSER}
+      - DJANGO_SUPERUSER_PASSWORD=${SUPERUSER_PASS}
+      - DJANGO_SUPERUSER_EMAIL=${SUPERUSER_EMAIL}
+    volumes:
+      - ./static:/usr/src/app/static
+    networks:
+      - djangonetwork
+    depends_on:
+      - postgres
+
+  postgres:
+    container_name: postgres
+    image: postgres:${PG_VERSION}-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    networks:
+      - djangonetwork
+
+  redis:
+    container_name: redis
+    image: redis:${REDIS_VERSION}-alpine
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis:/data
+    networks:
+      - djangonetwork
+
+  nginx:
+    container_name: nginx
+    image: nginx:${NGINX_VERSION}-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/configs:/etc/nginx/conf.d:ro
+      - ./static:/data/static
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+    networks:
+      - djangonetwork
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:${ES_VERSION}
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms200m -Xmx200m
+    networks:
+      - djangonetwork
+
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana-oss:${ES_VERSION}
+    restart: always
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+    networks:
+      - djangonetwork
+
+  migrate-data:
+    container_name: sqlite-postgres-migrate
+    image: nesqui/sqlite-postgres-migrate:latest
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+    networks:
+      - djangonetwork
+    depends_on:
+      - postgres
+
+  etl:
+    container_name: etl
+    image: nesqui/etl:latest
+    restart: always
+    environment:
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - ES_HOSTS=${ES_HOSTS}
+    depends_on:
+      - elasticsearch
+      - postgres
+    networks:
+      - djangonetwork
+
+  fastapi:
+    container_name: fastapi
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - ELASTIC_HOST=${ELASTIC_HOST}
+      - ELASTIC_PORT=${ELASTIC_PORT}
+    ports:
+      - "8000:8000"
+    networks:
+      - djangonetwork
+    depends_on:
+      - elasticsearch
+      - redis
+
+networks:
+  djangonetwork:
+    driver: bridge
