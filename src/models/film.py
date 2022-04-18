@@ -1,19 +1,16 @@
-import orjson
+from typing import Optional
 
-from pydantic import BaseModel
-
-
-def orjson_dumps(v, *, default):
-    # orjson.dumps возвращает bytes, а pydantic требует unicode, поэтому декодируем
-    return orjson.dumps(v, default=default).decode()
+from models.base_models import BaseApiConfig
 
 
-class Film(BaseModel):
+class Film(BaseApiConfig):
     id: str
     title: str
-    description: str
-
-    class Config:
-        # Заменяем стандартную работу с json на более быструю
-        json_loads = orjson.loads
-        json_dumps = orjson_dumps
+    description: Optional[str]
+    imdb_rating: float
+    genre: Optional[list[Optional[str]]]
+    actors: Optional[list[Optional[dict]]]
+    writers: Optional[list[Optional[dict]]]
+    director: Optional[list[Optional[str]]]
+    actors_names: Optional[list[Optional[str]]]
+    writers_names: Optional[list[Optional[str]]]
