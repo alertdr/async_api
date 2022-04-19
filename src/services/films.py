@@ -53,7 +53,7 @@ class FilmService:
         # Сохраняем данные о фильме, используя команду set
         # Выставляем время жизни кеша — 5 минут
         # pydantic позволяет сериализовать модель в json
-        await self.redis.set(film.id, film.json(), expire=FILM_CACHE_EXPIRE_IN_SECONDS)
+        await self.redis.set(film.id, film.json(), ex=FILM_CACHE_EXPIRE_IN_SECONDS)
 
 
 @lru_cache()  # Делает FilmService синглтоном

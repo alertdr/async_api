@@ -1,4 +1,3 @@
-import aioredis
 import uvicorn
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
@@ -7,7 +6,6 @@ from fastapi.responses import ORJSONResponse
 from api.v1 import films
 from core import config
 from db import elastic, redis
-from core.config import REDIS_URL
 
 app = FastAPI(
     title=config.PROJECT_NAME,
@@ -19,7 +17,6 @@ app = FastAPI(
 
 @app.on_event('startup')
 async def startup():
-    redis.redis = await aioredis.from_url(REDIS_URL, max_connections=20)
     elastic.es = AsyncElasticsearch(hosts=[f'{config.ELASTIC_HOST}:{config.ELASTIC_PORT}'])
 
 
