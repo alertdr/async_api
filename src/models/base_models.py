@@ -8,6 +8,8 @@ def orjson_dumps(v, *, default):
 
 
 class BaseApiConfig(BaseModel):
+    id: str
+
     class Config:
         # Заменяем стандартную работу с json на более быструю
         json_loads = orjson.loads

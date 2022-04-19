@@ -1,16 +1,17 @@
+from dataclasses import dataclass
 from typing import Optional
 
 from models.base_models import BaseApiConfig
 
 
+@dataclass
 class Film(BaseApiConfig):
-    id: str
     title: str
     description: Optional[str]
     imdb_rating: float
-    genre: Optional[list[Optional[str]]]
-    actors: Optional[list[Optional[dict]]]
-    writers: Optional[list[Optional[dict]]]
-    director: Optional[list[Optional[str]]]
-    actors_names: Optional[list[Optional[str]]]
-    writers_names: Optional[list[Optional[str]]]
+    genre: Optional[list[str]]
+    actors: Optional[list[dict]]
+    writers: Optional[list[dict]]
+    director: Optional[list[str]]
+    actors_names: Optional[list[str]]
+    writers_names: Optional[list[str]]
