@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "async_api"
+version = "0.1.0"
+description = ""
+authors = ["mishastik78 <mishastik78@yande.ru>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aioredis = "2.0.1"
+elasticsearch = {version = "7.10.1", extras = ["async"]}
+fastapi = "0.61.1"
+orjson = "3.6.8"
+pydantic = "1.9.0"
+uvicorn = "0.12.2"
+uvloop = "0.16.0"
+
+[tool.poetry.dev-dependencies]
+flake8 = "^4.0.1"
+autopep8 = "^1.6.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

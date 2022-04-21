@@ -8,9 +8,9 @@ class Film(BaseApiConfig):
     title: str
     description: Optional[str]
     imdb_rating: float
-    genre: Optional[list[Optional[str]]]
-    actors: Optional[list[Optional[dict]]]
-    writers: Optional[list[Optional[dict]]]
-    director: Optional[list[Optional[str]]]
-    actors_names: Optional[list[Optional[str]]]
-    writers_names: Optional[list[Optional[str]]]
+    genre: Optional[list[dict[str, str]]]
+    actors: Optional[list[dict[str, str]]]
+    writers: Optional[list[dict[str, str]]]
+    director: Optional[str]
+    actors_names: Optional[str]
+    writers_names: Optional[str]
