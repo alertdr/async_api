@@ -1,13 +1,8 @@
-from dataclasses import dataclass
-from typing import Optional
-
+from pydantic import Field
 from models.base_models import BaseApiConfig
 
 
-@dataclass
 class Person(BaseApiConfig):
-    full_name: str
-    role: list[str]
-    film_ids: dict[dict[str, Optional[list[str]]]]
-
-
+    full_name: str = Field(alias='name')
+    role: list[str] | None
+    film_ids: list[str] | None
