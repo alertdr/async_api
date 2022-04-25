@@ -72,7 +72,7 @@ class BaseService:
 
     async def _get_list_from_elastic(self) -> list[BaseApiConfig]:
         body = self._body_formation()
-        result = await self.elastic.search(index='movies', body=body)
+        result = await self.elastic.search(index=self.index, body=body)
         docs = result['hits']['hits']
         if docs:
             logger.info('Elastic found something.')
