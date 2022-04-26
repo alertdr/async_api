@@ -16,4 +16,4 @@ RUN python -m pip install --upgrade pip && \
 
 COPY src/. /usr/src/app
 
-ENTRYPOINT ["python", "./main.py"]
+ENTRYPOINT /usr/local/bin/gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
