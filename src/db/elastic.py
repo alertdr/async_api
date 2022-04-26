@@ -2,7 +2,7 @@ from typing import Optional
 
 from elasticsearch import AsyncElasticsearch
 
-from src.core.config import ELASTIC_HOST
+from core.config import ELASTIC_HOST
 
 es: Optional[AsyncElasticsearch] = None
 

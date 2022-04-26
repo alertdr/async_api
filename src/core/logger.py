@@ -52,7 +52,7 @@ LOGGING = {
         },
     },
     'root': {
-        'level': 'INFO',
+        'level': 'DEBUG',
         'formatter': 'verbose',
         'handlers': LOG_DEFAULT_HANDLERS,
     },
