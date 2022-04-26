@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 class PersonService(BaseService):
     index = 'persons'
     response_model = Person
+    search_fields = [
+        "name",
+    ]
 
 
 @lru_cache()

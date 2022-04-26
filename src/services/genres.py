@@ -17,6 +17,10 @@ logger = logging.getLogger(__name__)
 class GenreService(BaseService):
     index = 'genres'
     response_model = Genre
+    search_fields = [
+        "name",
+        "description"
+    ]
 
 
 @lru_cache()
