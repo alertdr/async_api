@@ -17,6 +17,31 @@ logger = logging.getLogger(__name__)
 class FilmService(BaseService):
     index = 'movies'
     response_model = Film
+    search_fields = [
+        "title",
+        "description"
+    ]
+
+    def _filter_query(self, filter):
+        if person_id := filter.pop('person', None):
+            filter.update({'actors': person_id, 'writers': person_id, 'directors': person_id})
+        nested = []
+        for key, value in filter.items():
+            nested.append({
+                "nested": {
+                    "path": key,
+                    "query": {
+                        "term": {
+                            key + ".id": value
+                        }
+                    }
+                }
+            })
+        return {
+            "bool": {
+                "should": nested
+            }
+        }
 
 
 @lru_cache()

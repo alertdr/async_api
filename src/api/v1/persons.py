@@ -23,8 +23,9 @@ class Person(PersonShort):
 
 
 @router.get('/{person_id}/film/')
-def redirect_to_films(person_id: str, request: Request):
-    path = f'/api/v1/films?filter[person]={person_id}'
+async def redirect_to_films(person_id: str, item_service: PersonService = Depends(get_person_service)):
+    person = await person_item(person_id, item_service)
+    path = f'/api/v1/films?filter={person.film_ids}'
     logger.debug('Redirect to %s', path)
     return RedirectResponse(path)
 

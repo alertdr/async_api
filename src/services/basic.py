@@ -15,8 +15,9 @@ logger = logging.getLogger(__name__)
 
 class BaseService:
     index = None
-    kwargs = {}
+    kwargs: dict = {}
     response_model = BaseApiConfig
+    search_fields = []
 
     def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
         self.redis = redis
@@ -51,14 +52,12 @@ class BaseService:
             }
         })
         if docs := result['hits']['hits']:
-            logger.info('Elastic found someone.')
+            logger.info('Elastic found id.')
             return self.response_model(**docs[0]['_source'])
         return None
 
     def create_list_id(self) -> str:
-        kwargs = self.kwargs
-        kwargs['index'] = self.index
-        return json.dumps(kwargs, sort_keys=True)
+        return json.dumps(self.kwargs, sort_keys=True)
 
     async def _put_list_to_cache(self, items: list[BaseApiConfig]) -> None:
         id = self.create_list_id()
@@ -71,8 +70,7 @@ class BaseService:
         return None
 
     async def _get_list_from_elastic(self) -> list[BaseApiConfig]:
-        body = self._body_formation()
-        result = await self.elastic.search(index='movies', body=body)
+        result = await self.elastic.search(index='movies', body=self.body)
         docs = result['hits']['hits']
         if docs:
             logger.info('Elastic found something.')
@@ -90,58 +88,41 @@ class BaseService:
 
     async def get_list(self, **kwargs) -> list[BaseApiConfig]:
         self.kwargs = kwargs
-        self._body_formation()
+        self.body = self._body_formation()
         if objs := await self._get_list_from_cache():
             return objs
         if objs := await self._get_list_from_elastic():
             await self._put_list_to_cache(objs)
         return objs
 
+    def _filter_query(self, filter: dict) -> dict:
+        return {}
+
     def _body_formation(self) -> dict:
-        kwargs = self.kwargs
+        self.kwargs['index'] = self.index
         body: dict = {}
-        logger.debug('Parameters set to %s', kwargs)
-        if query := kwargs.get('query', None):
-            body.update({
-                "query": {
-                    "multi_match": {
-                        "query": query,
-                        "fields": [
-                            "title",
-                            "description"
-                        ]
-                    }
+        logger.debug('Parameters set to %s', self.kwargs)
+        if query := self.kwargs.get('query', None):
+            body['query'] = {
+                "multi_match": {
+                    "query": query,
+                    "fields": self.search_fields
                 }
-            })
-        if (page := kwargs.get('page', None)) and isinstance(page, dict):
-            page['size'] = page['size'] if 'size' in page else PAGE_SIZE
-            body['size'] = page['size']
-            body['from'] = ((int(page['number']) - 1) * int(page['size'])) if 'number' in page else 0
+            }
+        else:
+            body['query'] = {'match_all': {}}
+        logger.debug('Query set to %s', body['query'])
+        if filter := self.kwargs.get('filter', None):
+            if isinstance(filter, dict):
+                body['filter'] = self._filter_query(filter)
+            else:
+                body['filter'] = {'id': {'values': filter}}
+        if (page := self.kwargs.get('page', None)) and isinstance(page, dict):
+            size = page['size'] if 'size' in page else PAGE_SIZE
+            body['size'] = size
+            body['from'] = ((int(page['number']) - 1) * int(size)) if 'number' in page else 0
             logger.debug('Pagination set to size %s, from item %s', body['size'], body['from'])
-        if (filter := kwargs.get('filter', None)) and isinstance(filter, dict):
-            if person_id := filter.pop('person', None):
-                filter.update({'actors': person_id, 'writers': person_id, 'directors': person_id})
-            nested = []
-            for key, value in filter.items():
-                nested.append({
-                    "nested": {
-                        "path": key,
-                        "query": {
-                            "term": {
-                                key + ".id": value
-                            }
-                        }
-                    }
-                })
-            body.update({
-                "query": {
-                    "bool": {
-                        "should": nested
-                    }
-                }
-            })
-            logger.debug('Filter set to %s', body['query'])
-        if sort := kwargs.get('sort', None):
+        if sort := self.kwargs.get('sort', None):
             order = 'desc' if sort.startswith('-') else 'asc'
             body.update({'sort': {sort.lstrip('-'): order}})
             logger.debug('Sort set to %s', body['sort'])
