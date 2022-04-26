@@ -32,7 +32,7 @@ class BaseService:
         await self.redis.set(id, raw, ex=FILM_CACHE_EXPIRE_IN_SECONDS)
 
     async def _get_item_from_cache(self, id: str) -> BaseApiConfig | list[BaseApiConfig] | None:
-        logger.debug('Find in cache with id=%s', id)
+        logger.debug('Looking in cache with id=%s', id)
         data = await self.redis.get(id)
         if not data:
             logger.info('Cached not found, go to elastic')
@@ -96,6 +96,9 @@ class BaseService:
         return objs
 
     def _filter_query(self, filter: dict) -> dict:
+        '''
+        Функция для фильтра по полям конкретного индекса. Определяется в дочернем классе.
+        '''
         return {}
 
     def _body_formation(self) -> dict:
