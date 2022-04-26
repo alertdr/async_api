@@ -19,7 +19,7 @@ services:
     volumes:
       - ./static:/usr/src/app/static
     networks:
-      - djangonetwork
+      - apinetwork
     depends_on:
       - postgres
 
@@ -34,7 +34,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - djangonetwork
+      - apinetwork
 
   redis:
     container_name: redis
@@ -47,7 +47,7 @@ services:
     volumes:
       - ./redis:/data
     networks:
-      - djangonetwork
+      - apinetwork
 
   nginx:
     container_name: nginx
@@ -66,7 +66,7 @@ services:
     ports:
       - "80:80"
     networks:
-      - djangonetwork
+      - apinetwork
 
   elasticsearch:
     container_name: elasticsearch
@@ -76,7 +76,7 @@ services:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms200m -Xmx200m
     networks:
-      - djangonetwork
+      - apinetwork
 
   kibana:
     container_name: kibana
@@ -87,7 +87,7 @@ services:
     ports:
       - "5601:5601"
     networks:
-      - djangonetwork
+      - apinetwork
 
   migrate-data:
     container_name: sqlite-postgres-migrate
@@ -98,7 +98,7 @@ services:
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_HOST=${DB_HOST}
     networks:
-      - djangonetwork
+      - apinetwork
     depends_on:
       - postgres
 
@@ -116,7 +116,7 @@ services:
       - elasticsearch
       - postgres
     networks:
-      - djangonetwork
+      - apinetwork
 
   fastapi:
     container_name: fastapi
@@ -132,11 +132,11 @@ services:
     ports:
       - "8000:8000"
     networks:
-      - djangonetwork
+      - apinetwork
     depends_on:
       - elasticsearch
       - redis
 
 networks:
-  djangonetwork:
+  apinetwork:
     driver: bridge
