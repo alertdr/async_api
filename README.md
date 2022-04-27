@@ -1,4 +1,4 @@
-https://github.com/alertdr/async_api
+ETL: https://github.com/alertdr/new_admin_panel_sprint_3
 # Проектная работа 4 спринта
 
 Используемая версия интерпритатора: python 3.10.2
