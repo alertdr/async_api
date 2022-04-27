@@ -22,7 +22,7 @@ class PersonService(BaseService):
     ]
 
 
-@lru_cache()
+@ lru_cache()
 def get_person_service(
         redis: Redis = Depends(get_redis),
         elastic: AsyncElasticsearch = Depends(get_elastic),

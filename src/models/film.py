@@ -15,7 +15,7 @@ class Film(BaseApiConfig):
     genre: list[Genre] | None
     actors: list[Person] | None
     writers: list[Person] | None
-    directors: list[Person] | None
+    director: list[Person] | None
     actors_names: Optional[list[str]] | Optional[str]
     writers_names: Optional[list[str]] | Optional[str]
     directors_names: Optional[list[str]] | Optional[str]

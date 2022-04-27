@@ -1,19 +1,15 @@
 
-from asyncio.log import logger
+import logging
 from http import HTTPStatus
-from uuid import UUID
 
 from fastapi import HTTPException, Request
-from pydantic import BaseModel, Field
 
 from models.base_models import BaseApiConfig as BaseDataModel
 from services.basic import BaseService
 
 from .tools import parse_brackets_params
 
-
-class BaseApiModel(BaseModel):
-    uuid: UUID = Field(alias='id')
+logger = logging.getLogger(__name__)
 
 
 async def item_details(item_id: str, item_service: BaseService) -> BaseDataModel:
@@ -24,8 +20,8 @@ async def item_details(item_id: str, item_service: BaseService) -> BaseDataModel
     return item
 
 
-async def item_list(item_service: BaseService, request: Request, **kwargs) -> list[BaseDataModel]:
+async def item_list(list_service: BaseService, request: Request, **kwargs) -> list[BaseDataModel]:
     params = parse_brackets_params(request.query_params)
     params.update(kwargs)
-    items = await item_service.get_list(**params)
+    items = await list_service.get_list(**params)
     return items

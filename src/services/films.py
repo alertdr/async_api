@@ -24,7 +24,7 @@ class FilmService(BaseService):
 
     def _filter_query(self, filter):
         if person_id := filter.pop('person', None):
-            filter.update({'actors': person_id, 'writers': person_id, 'directors': person_id})
+            filter.update({'actors': person_id, 'writers': person_id, 'director': person_id})
         nested = []
         for key, value in filter.items():
             nested.append({
