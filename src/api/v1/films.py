@@ -19,8 +19,8 @@ def filtering(
     return filter
 
 
-def sorting(sort: str = Query(None, description='Sort query by field (-field for desc)')) -> str | None:
-    if sort and sort.lstrip('-') in ('imdb_rating'):
+def sorting(sort: str = Query(None, description='Sort query by fields: "imdb_rating" (-field for desc)')) -> str | None:
+    if sort and sort.lstrip('-') in ('imdb_rating',):
         return sort
 
 

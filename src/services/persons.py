@@ -18,7 +18,7 @@ class PersonService(BaseService):
     index = 'persons'
     response_model = Person
     search_fields = [
-        "name",
+        'name',
     ]
 
 

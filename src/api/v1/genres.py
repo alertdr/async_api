@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def sorting(sort: str = Query(None, description='Sort query by field (-field for desc)')) -> str | None:
-    if sort and sort.lstrip('-') in ('name'):
+def sorting(sort: str = Query(None, description='Sort query by fields: "name" (-field for desc)')) -> str | None:
+    if sort and sort.lstrip('-') in ('name',):
         return sort
 
 

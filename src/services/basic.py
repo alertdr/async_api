@@ -67,7 +67,7 @@ class BaseService:
         self.kwargs = {'item_id': item_id}
         if obj := await self._get_from_cache():
             return obj                                                      # type: ignore
-        body = {"query": {"match": {"id": item_id}}}
+        body = {'query': {'match': {'id': item_id}}}
         if obj := await self._get_from_elastic(body):
             await self._put_to_cache(obj)
             return obj                                                      # type: ignore
@@ -100,9 +100,9 @@ class BaseService:
             logger.debug('Filter set to %s', body['query'])
         elif query := self.kwargs.get('query', None):
             body['query'] = {
-                "multi_match": {
-                    "query": query,
-                    "fields": self.search_fields
+                'multi_match': {
+                    'query': query,
+                    'fields': self.search_fields
                 }
             }
             logger.debug('Query set to %s', body['query'])

@@ -18,8 +18,8 @@ class FilmService(BaseService):
     index = 'movies'
     response_model = Film
     search_fields = [
-        "title",
-        "description",
+        'title',
+        'description',
     ]
     nested_fields = [
         'actors',
@@ -36,18 +36,18 @@ class FilmService(BaseService):
             if key not in self.nested_fields or value is None:
                 continue
             nested.append({
-                "nested": {
-                    "path": key,
-                    "query": {
-                        "term": {
-                            key + ".id": value
+                'nested': {
+                    'path': key,
+                    'query': {
+                        'term': {
+                            key + '.id': value
                         }
                     }
                 }
             })
         return {
-            "bool": {
-                "should": nested
+            'bool': {
+                'should': nested
             }
         }
 
