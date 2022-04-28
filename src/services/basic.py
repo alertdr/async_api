@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class BaseService:
-    index = None
+    index = ''
     kwargs: dict = {}
     response_model = BaseApiConfig
     search_fields = []
@@ -26,16 +26,16 @@ class BaseService:
     async def _put_to_cache(self, obj: BaseApiConfig | list[BaseApiConfig]) -> None:
         if isinstance(obj, list):
             raw = dumps([item.json() for item in obj])
-            id = self.create_list_id()
         else:
             raw = obj.json()
-            id = obj.id
-        logger.debug('Put to cache with id=%s', id)
-        await self.redis.set(id, raw, ex=FILM_CACHE_EXPIRE_IN_SECONDS)
+        key = self.create_redis_key()
+        logger.debug('Put to cache with key=%s', key)
+        await self.redis.set(key, raw, ex=FILM_CACHE_EXPIRE_IN_SECONDS)
 
-    async def _get_from_cache(self, id: str) -> BaseApiConfig | list[BaseApiConfig] | None:
-        logger.debug('Looking in cache with id=%s', id)
-        data = await self.redis.get(id)
+    async def _get_from_cache(self) -> BaseApiConfig | list[BaseApiConfig] | None:
+        key = self.create_redis_key()
+        logger.debug('Looking in cache with key=%s', key)
+        data = await self.redis.get(key)
         if not data:
             logger.info('Cached not found, go to elastic')
             return None
@@ -45,8 +45,9 @@ class BaseService:
             return [self.response_model.parse_raw(item) for item in obj]
         return self.response_model.parse_raw(data)
 
-    def create_list_id(self) -> str:
-        return json.dumps(self.kwargs, sort_keys=True)
+    def create_redis_key(self) -> str:
+        key: str = f'{self.index}::'
+        return key + json.dumps(self.kwargs)
 
     async def _get_from_elastic(self, body) -> list[BaseApiConfig] | BaseApiConfig | None:
         result = await self.elastic.search(index=self.index, body=body)
@@ -63,9 +64,10 @@ class BaseService:
                 return [self.response_model(**doc['_source']) for doc in docs]
 
     async def get_by_id(self, item_id: str) -> BaseApiConfig | None:
-        if obj := await self._get_from_cache(item_id):
+        self.kwargs = {'item_id': item_id}
+        if obj := await self._get_from_cache():
             return obj                                                      # type: ignore
-        body = {"query": {"match": {"id": item_id}}}
+        body = {'query': {'match': {'id': item_id}}}
         if obj := await self._get_from_elastic(body):
             await self._put_to_cache(obj)
             return obj                                                      # type: ignore
@@ -74,8 +76,7 @@ class BaseService:
     async def get_list(self, **kwargs) -> list[BaseApiConfig]:
         self.kwargs = kwargs
         body = self._body_formation()
-        id = self.create_list_id()
-        if objs := await self._get_from_cache(id):
+        if objs := await self._get_from_cache():
             return objs                                                     # type: ignore
         if objs := await self._get_from_elastic(body):
             await self._put_to_cache(objs)
@@ -88,7 +89,6 @@ class BaseService:
         return {}
 
     def _body_formation(self) -> dict:
-        self.kwargs['index'] = self.index
         body: dict = {}
         logger.debug('Parameters set to %s', self.kwargs)
         if filter := self.kwargs.get('filter', None):
@@ -100,16 +100,15 @@ class BaseService:
             logger.debug('Filter set to %s', body['query'])
         elif query := self.kwargs.get('query', None):
             body['query'] = {
-                "multi_match": {
-                    "query": query,
-                    "fields": self.search_fields
+                'multi_match': {
+                    'query': query,
+                    'fields': self.search_fields
                 }
             }
             logger.debug('Query set to %s', body['query'])
         if (page := self.kwargs.get('page', None)) and isinstance(page, dict):
-            size = page['size'] if 'size' in page else PAGE_SIZE
-            body['size'] = size
-            body['from'] = ((int(page['number']) - 1) * int(size)) if 'number' in page else 0
+            body['size'] = page['size']
+            body['from'] = (page['number'] - 1) * page['size']
             logger.debug('Pagination set to size %s, from item %s', body['size'], body['from'])
         if sort := self.kwargs.get('sort', None):
             order = 'desc' if sort.startswith('-') else 'asc'

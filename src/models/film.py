@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import Optional
 
-from models.base_models import BaseApiConfig
+from pydantic import Field
 
+from .base_models import BaseApiConfig, BaseApiModel
 from .genre import Genre
-from .person import Person
+from .person import Person, PersonShort
 
 
 class Film(BaseApiConfig):
@@ -19,3 +20,16 @@ class Film(BaseApiConfig):
     actors_names: Optional[list[str]] | Optional[str]
     writers_names: Optional[list[str]] | Optional[str]
     directors_names: Optional[list[str]] | Optional[str]
+
+
+class FilmList(BaseApiModel):
+    title: str
+    imdb_rating: float | None
+
+
+class FilmDetail(FilmList):
+    description: str | None
+    genre: list[Genre] | None
+    actors: list[PersonShort] | None
+    writers: list[PersonShort] | None
+    directors: list[PersonShort] | None = Field(alias='director')
