@@ -14,7 +14,7 @@ ETL: https://github.com/alertdr/ETL
 > docker-compose --profile optional up -d
 
 Запуск dev версии
-> docker-compose up -d -f docker-compose.dev.yml
+> docker-compose -f docker-compose.dev.yml up -d 
 
 ### API документация
 После успешного запуска сервисов доступна [документация openapi](http://127.0.0.1/api/openapi), [json формат](http://127.0.0.1/api/openapi.json)
