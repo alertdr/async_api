@@ -19,7 +19,13 @@ class FilmService(BaseService):
     response_model = Film
     search_fields = [
         "title",
-        "description"
+        "description",
+    ]
+    nested_fields = [
+        'actors',
+        'writers',
+        'director',
+        'genre',
     ]
 
     def _filter_query(self, filter):
@@ -27,6 +33,8 @@ class FilmService(BaseService):
             filter.update({'actors': person_id, 'writers': person_id, 'director': person_id})
         nested = []
         for key, value in filter.items():
+            if key not in self.nested_fields or value is None:
+                continue
             nested.append({
                 "nested": {
                     "path": key,
