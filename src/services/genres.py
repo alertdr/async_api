@@ -18,8 +18,8 @@ class GenreService(BaseService):
     index = 'genres'
     response_model = Genre
     search_fields = [
-        "name",
-        "description"
+        'name',
+        'description'
     ]
 
 

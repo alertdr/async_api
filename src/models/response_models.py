@@ -1,10 +1,15 @@
 from uuid import UUID
 
+import orjson
 from pydantic import BaseModel, Field
 
 
 class BaseApiModel(BaseModel):
     uuid: UUID = Field(alias='id')
+
+    class Config:
+        json_loads = orjson.loads
+        json_dumps = orjson.dumps
 
 
 class Genre(BaseApiModel):
