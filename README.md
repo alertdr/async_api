@@ -1,10 +1,10 @@
 ETL: https://github.com/alertdr/ETL
-# Проектная работа 4 спринта
+# Проектная работа
 Используемая версия интерпретатора: python 3.10.2
 
 ## Запуск проекта
 Для запуска проекта выполните команду
-> docker-compose up -d
+> docker-compose --profile core --profile optional up -d
 
 Опционально: Чтобы не тратить ресурсы на запуск вспомогательных контейнеров(kibana, migrate-data, etc.) выполните команду
 > docker-compose --profile core up -d
@@ -15,6 +15,9 @@ ETL: https://github.com/alertdr/ETL
 
 Запуск dev версии
 > docker-compose -f docker-compose.dev.yml up -d 
+
+Запуск тестов
+> docker-compose -f tests/functional/docker-compose.yml up -d 
 
 ### API документация
 После успешного запуска сервисов доступна [документация openapi](http://127.0.0.1/api/openapi), [json формат](http://127.0.0.1/api/openapi.json)
