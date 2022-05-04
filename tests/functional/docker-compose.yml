@@ -1,0 +1,66 @@
+version: "3.9"
+
+services:
+  redis:
+    container_name: redis
+    image: redis:${REDIS_VERSION}-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - ../../redis:/data
+    networks:
+      - testnetwork
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:${ES_VERSION}
+    restart: always
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms200m -Xmx200m
+    networks:
+      - testnetwork
+
+  fastapi:
+    container_name: fastapi
+    restart: always
+    build:
+      context: ../../.
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - ELASTIC_HOST=${ELASTIC_HOST}
+      - ELASTIC_PORT=${ELASTIC_PORT}
+    networks:
+      - testnetwork
+    depends_on:
+      - elasticsearch
+      - redis
+
+  tests:
+    container_name: test
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - ELASTIC_HOST=${ELASTIC_HOST}
+      - ELASTIC_PORT=${ELASTIC_PORT}
+    networks:
+      - testnetwork
+    depends_on:
+      - fastapi
+      - elasticsearch
+      - redis
+networks:
+  testnetwork:
+    driver: bridge
