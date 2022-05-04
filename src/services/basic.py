@@ -83,9 +83,9 @@ class BaseService:
         return objs                                                         # type: ignore
 
     def _filter_query(self, filter: dict) -> dict:
-        '''
+        """
         Функция для фильтра по полям конкретного индекса. Определяется в дочернем классе.
-        '''
+        """
         return {}
 
     def _body_formation(self) -> dict:
