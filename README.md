@@ -4,7 +4,7 @@ ETL: https://github.com/alertdr/ETL
 
 ## Запуск проекта
 Для запуска проекта выполните команду
-> docker-compose --profile core --profile optional up -d
+> docker-compose --profile all up -d
 
 Опционально: Чтобы не тратить ресурсы на запуск вспомогательных контейнеров(kibana, migrate-data, etc.) выполните команду
 > docker-compose --profile core up -d
