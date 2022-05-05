@@ -17,7 +17,7 @@ ETL: https://github.com/alertdr/ETL
 > docker-compose -f docker-compose.dev.yml up -d 
 
 Запуск тестов
-> docker-compose -f tests/functional/docker-compose.yml up -d 
+> docker-compose -f tests/functional/docker-compose.yml up --abort-on-container-exit tests
 
 ### API документация
 После успешного запуска сервисов доступна [документация openapi](http://127.0.0.1/api/openapi), [json формат](http://127.0.0.1/api/openapi.json)

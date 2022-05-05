@@ -1,8 +1,8 @@
 import os
 from time import sleep
 
-from redis import Redis
 from elasticsearch import Elasticsearch
+from redis import Redis
 
 
 def wait_for_es():
@@ -13,6 +13,8 @@ def wait_for_es():
             return
         print(f'Waiting for elasticsearch > {i}s')
         sleep(1)
+    else:
+        exit(1)
 
 
 def wait_for_redis():
@@ -25,6 +27,8 @@ def wait_for_redis():
         except BaseException:
             print(f'Waiting for redis > {i}s')
         sleep(1)
+    else:
+        exit(1)
 
 
 if __name__ == '__main__':

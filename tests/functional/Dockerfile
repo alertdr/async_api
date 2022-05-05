@@ -16,7 +16,4 @@ RUN python -m pip install --upgrade pip && \
 COPY utils/wait_for.py .
 COPY src/. /usr/src/app/src
 
-COPY entrypoint.sh /
-RUN chmod +x /entrypoint.sh
-
-ENTRYPOINT /entrypoint.sh
+ENTRYPOINT python /usr/src/app/wait_for.py && pytest /usr/src/app/src/*.py
