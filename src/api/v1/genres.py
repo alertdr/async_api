@@ -2,9 +2,10 @@ import logging
 
 from fastapi import APIRouter, Depends, Query
 
-from .base import item_details, item_list, pagination
 from models.genre import ResponseGenre
 from services.genres import GenreService, get_genre_service
+
+from .base import item_details, item_list, pagination
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

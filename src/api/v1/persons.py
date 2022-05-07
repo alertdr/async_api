@@ -3,9 +3,10 @@ import logging
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import RedirectResponse
 
-from .base import item_details, item_list, pagination, searching
 from models.person import ResponsePerson
 from services.persons import PersonService, get_person_service
+
+from .base import item_details, item_list, pagination, searching
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

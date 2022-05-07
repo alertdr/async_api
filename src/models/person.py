@@ -3,8 +3,7 @@ from uuid import UUID
 
 from pydantic import Field
 
-from .base_models import BaseApiConfig
-from .base_models import BaseApiModel
+from .base_models import BaseApiConfig, BaseApiModel
 
 
 class PersonShort(BaseApiModel):
