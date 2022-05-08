@@ -77,10 +77,12 @@ class BaseService:
         self.kwargs = kwargs
         body = self._body_formation()
         if objs := await self._get_from_cache():
-            return objs                                                     # type: ignore
-        if objs := await self._get_from_elastic(body):
+            pass                                                     # type: ignore
+        elif objs := await self._get_from_elastic(body):
             await self._put_to_cache(objs)
-        return objs                                                         # type: ignore
+        if objs:
+            return objs if isinstance(objs, list) else [objs]
+        return []                                        # type: ignore
 
     def _filter_query(self, filter: dict) -> dict:
         '''
