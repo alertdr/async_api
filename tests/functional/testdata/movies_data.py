@@ -146,14 +146,15 @@ class Movies:
             'description': "On the day of James Kirk's birth, his father dies on his damaged",
             'imdb_rating': 7.9,
             'creation_date': None,
-            'genre': [{'id': '120a21cf-9097-479e-904a-13dd7198c1dd', 'name': 'Adventure'}],
+            'genre': [{'id': '120a21cf-9097-479e-904a-13dd7198c1dd', 'name': 'Adventure'},
+                      {'id': '3d8d9bf5-0d90-4353-88ba-4ccc5d2c07ff', 'name': 'Action'}],
             'actors': [{'id': 'a5a8f573-3cee-4ccc-8a2b-91cb9f55250a', 'name': 'George Lucas'}],
             'director': [{'id': 'a5a8f573-3cee-4ccc-8a2b-91cb9f55250a', 'name': 'George Lucas'}],
             'writers': [{'id': 'a5a8f573-3cee-4ccc-8a2b-91cb9f55250a', 'name': 'George Lucas'}],
-            'directors_names': [],
-            'actors_names': [],
-            'writers_names': [],
-            'genres_names': []
+            'directors_names': ['George Lucas'],
+            'actors_names': ['George Lucas'],
+            'writers_names': ['George Lucas'],
+            'genres_names': ['Adventure']
         },
         {
             'id': '3d825f60-9fff-4dfe-b294-1a45fa1e115d',
@@ -180,15 +181,23 @@ class Movies:
     def expected(cls) -> list:
         expected_data = list()
         replaced_keys = ['actors', 'director', 'writers']
+        keys_repr = ['uuid', 'title', 'description', 'imdb_rating', 'genre', 'actors', 'directors', 'writers']
         data = cls._get_data_copy()
         for item in data:
-            item['uuid'] = item.pop('id')
             for key in item:
-                if key in replaced_keys and isinstance(item[key], list):
+                if key == 'genre':
+                    for genre in item['genre']:
+                        genre['uuid'] = genre.pop('id')
+                if key in replaced_keys:
                     for person in item[key]:
                         person['uuid'] = person.pop('id', None)
                         person['full_name'] = person.pop('name', None)
-            expected_data.append(item)
+            if 'director' in item:
+                item['directors'] = item.pop('director')
+            new_item = {key: item[key] for key in item.keys() if key in keys_repr}
+            new_item['uuid'] = item['id']
+
+            expected_data.append(new_item)
         return expected_data
 
     @classmethod
@@ -209,7 +218,7 @@ class Movies:
         data = cls._get_data_copy()
         genres = list()
         for item in data:
-            genres.append(*[elem['id'] for elem in item['genre'] if 'id' in elem])
+            genres.extend([elem['id'] for elem in item['genre'] if 'id' in elem])
         uniq = list(set(genres))
         count = [genres.count(id) for id in uniq]
         return zip(uniq, count)

@@ -71,7 +71,7 @@ async def check_db_index_is_clean(es_client: AsyncElasticsearch, index: str):
 @pytest.fixture(scope='session')
 async def fill_db(es_client: AsyncElasticsearch):
     index = 'movies'
-    # await check_db_index_is_clean(es_client, index)
+    await check_db_index_is_clean(es_client, index)
     if not await es_client.indices.exists(index=index):
         await es_client.indices.create(index=index, body=Movies.mapping)
     data = [{'_index': 'movies', '_id': item['id'], '_source': item} for item in Movies.data]
