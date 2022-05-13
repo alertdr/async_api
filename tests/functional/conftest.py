@@ -1,15 +1,16 @@
+import asyncio
 from dataclasses import dataclass
-from elasticsearch.helpers import async_bulk
+
 import aiohttp
 import aioredis
 import pytest
 from elasticsearch import AsyncElasticsearch
+from elasticsearch.helpers import async_bulk
 from multidict import CIMultiDictProxy
-import asyncio
-from redis import Redis
-
-from testdata.movies_data import Movies
 from testdata.genres_data import Genre
+from testdata.movies_data import Movies
+
+from redis import Redis
 
 ES_HOST = '127.0.0.1:9200'
 REDIS_HOST = '127.0.0.1:6379'

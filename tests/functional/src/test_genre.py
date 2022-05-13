@@ -1,7 +1,8 @@
 import pytest
-from testdata.genres_data import Genre
-from redis import Redis
 from elasticsearch import AsyncElasticsearch
+from testdata.genres_data import Genre
+
+from redis import Redis
 
 
 @pytest.mark.asyncio
