@@ -196,7 +196,6 @@ class Movies:
                 item['directors'] = item.pop('director')
             new_item = {key: item[key] for key in item.keys() if key in keys_repr}
             new_item['uuid'] = item['id']
-
             expected_data.append(new_item)
         return expected_data
 
