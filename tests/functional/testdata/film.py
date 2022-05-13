@@ -1,3 +1,51 @@
+movies_mapping = {
+    "mappings": {
+        "properties": {
+            "actors": {
+                "type": "nested",
+                "properties": {
+                    "id": {
+                        "type": "keyword"
+                    }
+                }
+            },
+            "genre": {
+                "type": "nested",
+                "properties": {
+                    "id": {
+                        "type": "keyword"
+                    },
+                    "name": {
+                        "type": "keyword"
+                    }
+                }
+            },
+            "director": {
+                "type": "nested",
+                "properties": {
+                    "id": {
+                        "type": "keyword"
+                    },
+                    "name": {
+                        "type": "text",
+                    }
+                }
+            },
+            "writers": {
+                "type": "nested",
+                "properties": {
+                    "id": {
+                        "type": "keyword"
+                    },
+                    "name": {
+                        "type": "text"
+                    }
+                }
+            }
+        }
+    }
+}
+
 single_film = {
     '_index': 'movies', '_id': '3d825f60-9fff-4dfe-b294-1a45fa1e115d',
     '_source': {

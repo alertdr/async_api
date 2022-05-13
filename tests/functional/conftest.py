@@ -9,6 +9,7 @@ from elasticsearch import AsyncElasticsearch
 from multidict import CIMultiDictProxy
 
 from .config import API_URL, ELASTIC_HOST, REDIS_URL
+from .testdata.film import movies_mapping
 
 
 @dataclass
@@ -33,6 +34,8 @@ async def session():
 @pytest.fixture(scope='session')
 async def es_client():
     client = AsyncElasticsearch(hosts=ELASTIC_HOST)
+    if not await client.indices.exists(index='movies'):
+        await client.indices.create(index='movies', body=movies_mapping)
     yield client
     await client.close()
 
@@ -40,6 +43,7 @@ async def es_client():
 @pytest.fixture(scope='session')
 async def redis_client():
     client = await aioredis.from_url(REDIS_URL, decode_responses=True)
+    await client.flushall()
     yield client
     await client.close()
 
