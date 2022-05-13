@@ -9,6 +9,7 @@ import asyncio
 from redis import Redis
 
 from testdata.movies_data import Movies
+from testdata.genres_data import Genre
 
 ES_HOST = '127.0.0.1:9200'
 REDIS_HOST = '127.0.0.1:6379'
@@ -63,26 +64,32 @@ def make_get_request(http_session):
     return inner
 
 
-async def check_db_index_is_clean(es_client: AsyncElasticsearch, index: str):
-    if await es_client.indices.exists(index=index):
-        raise ValueError(f'Elastic db contains {index} index, possibility prod version. Check db.')
-
-
-@pytest.fixture(scope='session')
-async def fill_db(es_client: AsyncElasticsearch):
+@pytest.fixture(scope='module')
+async def fill_db_movies(es_client: AsyncElasticsearch):
     index = 'movies'
-    await check_db_index_is_clean(es_client, index)
-    if not await es_client.indices.exists(index=index):
-        await es_client.indices.create(index=index, body=Movies.mapping)
-    data = [{'_index': 'movies', '_id': item['id'], '_source': item} for item in Movies.data]
-    await async_bulk(es_client, data)
-    while (response := await es_client.search(index=index)) and response['hits']['total']['value'] < len(Movies.data):
-        print('Ждем данные в базе...')
-        await asyncio.sleep(.1)
+    model = Movies
+    await _fill_db(es_client, index, model)
     yield
     await es_client.indices.delete(index=index)
 
 
-@pytest.fixture()
-def clean_redis(redis_client):
-    redis_client.flushdb()
+@pytest.fixture(scope='module')
+async def fill_db_genres(es_client: AsyncElasticsearch):
+    index = 'genres'
+    model = Genre
+    await _fill_db(es_client, index, model)
+    yield
+    await es_client.indices.delete(index=index)
+
+
+async def _fill_db(es_client: AsyncElasticsearch, index, cls):
+    if await es_client.indices.exists(index=index):
+        raise ValueError(f'Elastic db contains {index} index, possibility prod version. Check db.')
+    await es_client.indices.create(index=index, body=cls.mapping)
+    data = [{'_index': index, '_id': item['id'], '_source': item} for item in cls.data]
+    await async_bulk(es_client, data, refresh=True)
+
+
+@pytest.fixture(autouse=True)
+async def clean_redis(redis_client: Redis):
+    await redis_client.flushdb(asynchronous=True)

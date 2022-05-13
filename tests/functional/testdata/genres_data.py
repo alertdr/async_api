@@ -1,8 +1,8 @@
-import copy, uuid
+import uuid
 
 
 class Genre:
-    mappings = {
+    mapping = {
         "settings": {
             "refresh_interval": "1s",
             "analysis": {
