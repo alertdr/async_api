@@ -1,5 +1,4 @@
 import pytest
-
 from testdata.movies_data import Movies
 
 
