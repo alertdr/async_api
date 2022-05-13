@@ -82,12 +82,12 @@ class BaseService:
             await self._put_to_cache(objs)
         if objs:
             return objs if isinstance(objs, list) else [objs]
-        return []
+        return []                                        # type: ignore
 
     def _filter_query(self, filter: dict) -> dict:
-        '''
+        """
         Функция для фильтра по полям конкретного индекса. Определяется в дочернем классе.
-        '''
+        """
         return {}
 
     def _body_formation(self) -> dict:

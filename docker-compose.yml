@@ -3,7 +3,7 @@ version: "3.9"
 services:
   web:
     container_name: django
-    profiles: ["core"]
+    profiles: ["core", "all"]
     restart: always
     image: nesqui/django-app:latest
     environment:
@@ -26,7 +26,7 @@ services:
 
   postgres:
     container_name: postgres
-    profiles: ["core"]
+    profiles: ["core", "all"]
     image: postgres:${PG_VERSION}-alpine
     restart: always
     environment:
@@ -38,7 +38,7 @@ services:
 
   redis:
     container_name: redis
-    profiles: ["core"]
+    profiles: ["core", "all"]
     image: redis:${REDIS_VERSION}-alpine
     restart: always
     environment:
@@ -50,7 +50,7 @@ services:
 
   nginx:
     container_name: nginx
-    profiles: ["core"]
+    profiles: ["core", "all"]
     image: nginx:${NGINX_VERSION}-alpine
     restart: always
     environment:
@@ -70,7 +70,7 @@ services:
 
   elasticsearch:
     container_name: elasticsearch
-    profiles: ["core"]
+    profiles: ["core", "all"]
     image: docker.elastic.co/elasticsearch/elasticsearch-oss:${ES_VERSION}
     restart: always
     environment:
@@ -81,7 +81,7 @@ services:
 
   etl:
     container_name: etl
-    profiles: ["core"]
+    profiles: ["core", "all"]
     image: nesqui/etl:latest
     restart: always
     environment:
@@ -98,7 +98,7 @@ services:
 
   fastapi:
     container_name: fastapi
-    profiles: ["core"]
+    profiles: ["core", "all"]
     restart: always
     build:
       context: .
@@ -116,7 +116,7 @@ services:
 
   kibana:
     container_name: kibana
-    profiles: ["optional"]
+    profiles: ["optional", "all"]
     image: docker.elastic.co/kibana/kibana-oss:${ES_VERSION}
     restart: always
     depends_on:
@@ -128,7 +128,7 @@ services:
 
   migrate-data:
     container_name: sqlite-postgres-migrate
-    profiles: ["optional"]
+    profiles: ["optional", "all"]
     image: nesqui/sqlite-postgres-migrate:latest
     environment:
       - DB_NAME=${DB_NAME}
