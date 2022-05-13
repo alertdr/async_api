@@ -14,6 +14,7 @@ from .testdata.genre import Genres
 from .testdata.person import Persons
 
 INDICES = {'persons': Persons, 'genres': Genres, 'movies': Movies}
+URL = API_URL + '/api/v1/'
 
 
 @dataclass
@@ -55,7 +56,7 @@ async def redis_client():
 @pytest.fixture
 def get_request(session):
     async def inner(path: str, params: Optional[dict] = None) -> HTTPResponse:
-        url = API_URL + path
+        url = URL + path
         params = params or {}
         async with session.get(url, params=params, allow_redirects=True) as response:
             return HTTPResponse(
