@@ -48,7 +48,6 @@ async def es_client():
 @pytest.fixture(scope='session')
 async def redis_client():
     client = await aioredis.from_url(REDIS_URL, decode_responses=True)
-    await client.flushall()
     yield client
     await client.close()
 
@@ -66,6 +65,11 @@ def get_request(session):
             )
 
     return inner
+
+
+@pytest.fixture(autouse=True)
+async def clean_redis(redis_client):
+    await redis_client.flushdb(asynchronous=True)
 
 
 async def create_indices(es: AsyncElasticsearch):

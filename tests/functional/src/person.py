@@ -8,6 +8,26 @@ pytestmark = pytest.mark.asyncio
 
 
 @pytest.mark.parametrize(
+    'path, expected, upload_data, status_code, redis_key, expected_cache',
+    [
+        ['persons/search?query=George&page[size]=50&page[number]=1', [Persons.expected_person1], [Persons.person1],
+         200, '{"query": "George", "page": {"size": 50, "number": 1}, "sort": null}', Persons.expected_cache2],
+        ['persons/search?query=123&page[size]=50&page[number]=1', [], [], 200, '', None],
+
+    ]
+)
+async def test_search(es_client, redis_client, get_request, path, expected,
+                      upload_data, status_code, redis_key, expected_cache):
+    await helpers.async_bulk(es_client, upload_data, refresh='wait_for')
+    response = await get_request(path=path)
+    redis_cache = await redis_client.get('persons::%s' % redis_key)
+
+    assert response.status == status_code
+    assert response.body == expected
+    assert redis_cache == expected_cache
+
+
+@pytest.mark.parametrize(
     'path, expected, upload_data, status_code',
     [
         ['persons/a5a8f573-3cee-4ccc-8a2b-91cb9f55250a', Persons.expected_person1, [Persons.person1], 200],
@@ -17,7 +37,6 @@ pytestmark = pytest.mark.asyncio
 async def test_search_by_id(es_client, get_request, path, expected, upload_data, status_code):
     await helpers.async_bulk(es_client, upload_data, refresh='wait_for')
     response = await get_request(path=path)
-    print(response.body)
     assert response.status == status_code
     assert response.body == expected
 
@@ -28,7 +47,6 @@ async def test_search_persons(es_client, get_request):
 
     assert response.status == 200
     assert len(response.body) == 2
-    print(response.body)
     assert response.body == Persons.expected_persons
 
 
