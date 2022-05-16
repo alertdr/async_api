@@ -14,6 +14,6 @@ RUN python -m pip install --upgrade pip && \
     rm requirements.txt
 
 COPY utils/wait_for.py .
-COPY src/. /usr/src/app/src
+COPY . /usr/src/app/
 
-ENTRYPOINT python /usr/src/app/wait_for.py && pytest /usr/src/app/src/*.py
+ENTRYPOINT python wait_for.py && pytest --disable-pytest-warnings src/*.py
