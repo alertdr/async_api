@@ -1,20 +1,20 @@
 import asyncio
 from dataclasses import dataclass
-from typing import Optional
 
 import aiohttp
 import aioredis
-import pytest as pytest
+import pytest
 from elasticsearch import AsyncElasticsearch
+from elasticsearch.helpers import async_bulk
 from multidict import CIMultiDictProxy
+from redis import Redis
 
-from .config import API_URL, ELASTIC_HOST, REDIS_URL
-from .testdata.film import Movies
-from .testdata.genre import Genres
-from .testdata.person import Persons
+from .config import ELASTIC_HOST, REDIS_URL, API_URL
+from .testdata.genres import Genres
+from .testdata.movies import Movies
+from .testdata.persons import Persons
 
-INDICES = {'persons': Persons, 'genres': Genres, 'movies': Movies}
-URL = API_URL + '/api/v1/'
+CLIENT_URL = API_URL + '/api/v1'
 
 
 @dataclass
@@ -30,18 +30,9 @@ def event_loop():
 
 
 @pytest.fixture(scope='session')
-async def session():
-    session = aiohttp.ClientSession()
-    yield session
-    await session.close()
-
-
-@pytest.fixture(scope='session')
 async def es_client():
     client = AsyncElasticsearch(hosts=ELASTIC_HOST)
-    await create_indices(es=client)
     yield client
-    await client.indices.delete(index=list(INDICES.keys()))
     await client.close()
 
 
@@ -52,12 +43,19 @@ async def redis_client():
     await client.close()
 
 
+@pytest.fixture(scope='session')
+async def http_session():
+    session = aiohttp.ClientSession()
+    yield session
+    await session.close()
+
+
 @pytest.fixture
-def get_request(session):
-    async def inner(path: str, params: Optional[dict] = None) -> HTTPResponse:
-        url = URL + path
+def get_request(http_session):
+    async def inner(method: str, params: dict | None = None) -> HTTPResponse:
         params = params or {}
-        async with session.get(url, params=params, allow_redirects=True) as response:
+        url = CLIENT_URL + method
+        async with http_session.get(url, params=params, allow_redirects=True) as response:
             return HTTPResponse(
                 body=await response.json(),
                 headers=response.headers,
@@ -67,12 +65,41 @@ def get_request(session):
     return inner
 
 
+@pytest.fixture(scope='module')
+async def fill_db_movies(es_client: AsyncElasticsearch):
+    index = 'movies'
+    model = Movies
+    await _fill_db(es_client, index, model)
+    yield
+    await es_client.indices.delete(index=index)
+
+
+@pytest.fixture(scope='module')
+async def fill_db_genres(es_client: AsyncElasticsearch):
+    index = 'genres'
+    model = Genres
+    await _fill_db(es_client, index, model)
+    yield
+    await es_client.indices.delete(index=index)
+
+
+@pytest.fixture(scope='module')
+async def fill_db_persons(es_client: AsyncElasticsearch):
+    index = 'persons'
+    model = Persons
+    await _fill_db(es_client, index, model)
+    yield
+    await es_client.indices.delete(index=index)
+
+
+async def _fill_db(es_client: AsyncElasticsearch, index, cls):
+    if await es_client.indices.exists(index=index):
+        raise ValueError(f'Elastic db contains {index} index, possibility prod version. Check db.')
+    await es_client.indices.create(index=index, body=cls.mapping)
+    data = [{'_index': index, '_id': item['id'], '_source': item} for item in cls.data]
+    await async_bulk(es_client, data, refresh=True)
+
+
 @pytest.fixture(autouse=True)
-async def clean_redis(redis_client):
+async def clean_redis(redis_client: Redis):
     await redis_client.flushdb(asynchronous=True)
-
-
-async def create_indices(es: AsyncElasticsearch):
-    for index_name, model in INDICES.items():
-        if not await es.indices.exists(index=index_name):
-            await es.indices.create(index=index_name, body=model.mapping)

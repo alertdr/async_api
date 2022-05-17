@@ -2,9 +2,10 @@ import logging
 
 from fastapi import APIRouter, Depends, Query
 
-from .base import item_details, item_list, pagination, searching
 from models.film import FilmDetail, FilmList
 from services.films import FilmService, get_film_service
+
+from .base import item_details, item_list, pagination, searching
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

@@ -1,7 +1,6 @@
 from typing import Optional
 
-from .base_models import BaseApiConfig
-from .base_models import BaseApiModel
+from .base_models import BaseApiConfig, BaseApiModel
 
 
 class Genre(BaseApiConfig):

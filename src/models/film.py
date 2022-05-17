@@ -4,7 +4,7 @@ from typing import Optional
 from pydantic import Field
 
 from .base_models import BaseApiConfig, BaseApiModel
-from .genre import Genre
+from .genre import Genre, ResponseGenre
 from .person import Person, PersonShort
 
 
@@ -29,7 +29,7 @@ class FilmList(BaseApiModel):
 
 class FilmDetail(FilmList):
     description: str | None
-    genre: list[Genre] | None
+    genre: list[ResponseGenre] | None
     actors: list[PersonShort] | None
     writers: list[PersonShort] | None
     directors: list[PersonShort] | None = Field(alias='director')
