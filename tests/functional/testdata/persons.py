@@ -1,4 +1,7 @@
-class Persons:
+from .base import Error
+
+
+class Persons(Error):
     mapping = {
         "settings": {
             "refresh_interval": "1s",
@@ -85,6 +88,12 @@ class Persons:
             'films_as_actor': [],
             'films_as_director': [],
             'films_as_writer': ['3d825f60-9fff-4dfe-b294-1a45fa1e115d']
+        },
+        {
+            'id': '5b4bf1bc-3397-4e83-9b17-8b10c6544ed9', 'name': 'Cant Immanuel', 'roles': ['director'],
+            'films_as_actor': [],
+            'films_as_director': ['3d825f60-9fff-4dfe-b294-1a45fa1e115d'],
+            'films_as_writer': []
         }
     ]
 

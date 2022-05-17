@@ -24,7 +24,7 @@ async def test_genres_sort_pagination(fill_db_genres, get_request, reverse: bool
 
 
 @pytest.mark.parametrize('uuid', [item['id'] for item in Genres.data])
-async def test_film_id(fill_db_genres, get_request, uuid):
+async def test_film_id(fill_db_genres, get_request, uuid: str):
     response = await get_request(f'/genres/{uuid}')
     expected = Genres.expected.copy()
 
@@ -34,7 +34,7 @@ async def test_film_id(fill_db_genres, get_request, uuid):
 
 
 @pytest.mark.parametrize('page_number, size', [(0, 1), (1, 0), (-1, 1), (1, -1), ('asdfg', 1), (1, 'asdf')])
-async def test_wrong_parameters(fill_db_genres, get_request, page_number, size):
+async def test_wrong_parameters(fill_db_genres, get_request, page_number: str | int, size: str | int):
     response = await get_request(f'/genres?page[number]={page_number}&page[size]={size}')
 
     assert response.status == 422
@@ -47,7 +47,7 @@ async def test_wrong_genre_id(fill_db_genres, get_request):
 
 
 @pytest.mark.parametrize('uuid', [Genres.data[0]['id']])
-async def test_redis(fill_db_genres, redis_client: Redis, es_client: AsyncElasticsearch, get_request, uuid):
+async def test_redis(fill_db_genres, redis_client: Redis, es_client: AsyncElasticsearch, get_request, uuid: str):
     expected = Genres.expected[0]
 
     assert await redis_client.dbsize() == 0

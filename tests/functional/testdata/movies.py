@@ -1,7 +1,9 @@
 import copy
 
+from .base import Error
 
-class Movies:
+
+class Movies(Error):
     mapping = {
         'settings': {
             'refresh_interval': '1s',
@@ -165,9 +167,9 @@ class Movies:
             'genre': [{'id': '3d8d9bf5-0d90-4353-88ba-4ccc5d2c07ff', 'name': 'Action'}],
             'actors': [{'id': 'a5a8f573-3cee-4ccc-8a2b-91cb9f55250a', 'name': 'George Lucas'},
                        {'id': '5b4bf1bc-3397-4e83-9b17-8b10c6544ed1', 'name': 'Harrison Ford'}],
-            'director': [],
+            'director': [{'id': '5b4bf1bc-3397-4e83-9b17-8b10c6544ed9', 'name': 'Cant Immanuel'}],
             'writers': [{'id': '5b4bf1bc-3397-4e83-9b17-8b10c6544ed2', 'name': 'Immanuel Cant'}],
-            'directors_names': [],
+            'directors_names': ['Cant Immanuel'],
             'actors_names': ['George Lucas', 'Harrison Ford'],
             'writers_names': ['Immanuel Cant'],
             'genres_names': []
