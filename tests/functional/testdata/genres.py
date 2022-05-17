@@ -1,7 +1,9 @@
 import uuid
 
+from .base import Error
 
-class Genres:
+
+class Genres(Error):
     mapping = {
         "settings": {
             "refresh_interval": "1s",
