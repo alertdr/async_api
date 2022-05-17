@@ -7,15 +7,14 @@ import pytest
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
 from multidict import CIMultiDictProxy
-from testdata.genres_data import Genre
-from testdata.movies_data import Movies
-
 from redis import Redis
 
-ES_HOST = '127.0.0.1:9200'
-REDIS_HOST = '127.0.0.1:6379'
-CLIENT_URL = 'http://127.0.0.1:8000/api/v1'
-REDIS_URL = f'redis://{REDIS_HOST}'
+from .config import ELASTIC_HOST, REDIS_URL, API_URL
+from .testdata.genres import Genres
+from .testdata.movies import Movies
+from .testdata.persons import Persons
+
+CLIENT_URL = API_URL + '/api/v1'
 
 
 @dataclass
@@ -32,7 +31,7 @@ def event_loop():
 
 @pytest.fixture(scope='session')
 async def es_client():
-    client = AsyncElasticsearch(hosts=ES_HOST)
+    client = AsyncElasticsearch(hosts=ELASTIC_HOST)
     yield client
     await client.close()
 
@@ -52,16 +51,17 @@ async def http_session():
 
 
 @pytest.fixture
-def make_get_request(http_session):
+def get_request(http_session):
     async def inner(method: str, params: dict | None = None) -> HTTPResponse:
         params = params or {}
         url = CLIENT_URL + method
-        async with http_session.get(url, params=params) as response:
+        async with http_session.get(url, params=params, allow_redirects=True) as response:
             return HTTPResponse(
                 body=await response.json(),
                 headers=response.headers,
                 status=response.status,
             )
+
     return inner
 
 
@@ -77,7 +77,16 @@ async def fill_db_movies(es_client: AsyncElasticsearch):
 @pytest.fixture(scope='module')
 async def fill_db_genres(es_client: AsyncElasticsearch):
     index = 'genres'
-    model = Genre
+    model = Genres
+    await _fill_db(es_client, index, model)
+    yield
+    await es_client.indices.delete(index=index)
+
+
+@pytest.fixture(scope='module')
+async def fill_db_persons(es_client: AsyncElasticsearch):
+    index = 'persons'
+    model = Persons
     await _fill_db(es_client, index, model)
     yield
     await es_client.indices.delete(index=index)

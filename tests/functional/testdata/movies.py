@@ -2,7 +2,6 @@ import copy
 
 
 class Movies:
-
     mapping = {
         'settings': {
             'refresh_interval': '1s',
@@ -148,11 +147,12 @@ class Movies:
             'creation_date': None,
             'genre': [{'id': '120a21cf-9097-479e-904a-13dd7198c1dd', 'name': 'Adventure'},
                       {'id': '3d8d9bf5-0d90-4353-88ba-4ccc5d2c07ff', 'name': 'Action'}],
-            'actors': [{'id': 'a5a8f573-3cee-4ccc-8a2b-91cb9f55250a', 'name': 'George Lucas'}],
+            'actors': [{'id': '5b4bf1bc-3397-4e83-9b17-8b10c6544ed1', 'name': 'Harrison Ford'}],
             'director': [{'id': 'a5a8f573-3cee-4ccc-8a2b-91cb9f55250a', 'name': 'George Lucas'}],
-            'writers': [{'id': 'a5a8f573-3cee-4ccc-8a2b-91cb9f55250a', 'name': 'George Lucas'}],
+            'writers': [{'id': 'a5a8f573-3cee-4ccc-8a2b-91cb9f55250a', 'name': 'George Lucas'},
+                        {'id': '5b4bf1bc-3397-4e83-9b17-8b10c6544ed2', 'name': 'Immanuel Cant'}],
             'directors_names': ['George Lucas'],
-            'actors_names': ['George Lucas'],
+            'actors_names': ['Harrison Ford'],
             'writers_names': ['George Lucas'],
             'genres_names': ['Adventure']
         },
@@ -163,12 +163,13 @@ class Movies:
             'imdb_rating': 8.6,
             'creation_date': None,
             'genre': [{'id': '3d8d9bf5-0d90-4353-88ba-4ccc5d2c07ff', 'name': 'Action'}],
-            'actors': [{'id': 'a5a8f573-3cee-4ccc-8a2b-91cb9f55250a', 'name': 'George Lucas'}],
-            'director': [{'id': 'a5a8f573-3cee-4ccc-8a2b-91cb9f55250a', 'name': 'George Lucas'}],
-            'writers': [{'id': 'a5a8f573-3cee-4ccc-8a2b-91cb9f55250a', 'name': 'George Lucas'}],
+            'actors': [{'id': 'a5a8f573-3cee-4ccc-8a2b-91cb9f55250a', 'name': 'George Lucas'},
+                       {'id': '5b4bf1bc-3397-4e83-9b17-8b10c6544ed1', 'name': 'Harrison Ford'}],
+            'director': [],
+            'writers': [{'id': '5b4bf1bc-3397-4e83-9b17-8b10c6544ed2', 'name': 'Immanuel Cant'}],
             'directors_names': [],
-            'actors_names': [],
-            'writers_names': [],
+            'actors_names': ['George Lucas', 'Harrison Ford'],
+            'writers_names': ['Immanuel Cant'],
             'genres_names': []
         }
     ]
@@ -219,5 +220,5 @@ class Movies:
         for item in data:
             genres.extend([elem['id'] for elem in item['genre'] if 'id' in elem])
         uniq = list(set(genres))
-        count = [genres.count(id) for id in uniq]
+        count = [genres.count(i) for i in uniq]
         return zip(uniq, count)
