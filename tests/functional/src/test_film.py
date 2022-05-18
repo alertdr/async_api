@@ -1,6 +1,7 @@
+from http import HTTPStatus
+
 import pytest
 from aioredis import Redis
-from elasticsearch import AsyncElasticsearch
 
 from ..testdata.movies import Movies
 
@@ -8,15 +9,15 @@ pytestmark = pytest.mark.asyncio
 
 
 @pytest.mark.parametrize('query, page_number, page_size, expected_status, expected_body, cache_size', [
-    ('Wars', 1, 10, 200, [Movies.expected_short()[1]], 1),
-    ('Harrison', 1, -1, 422, Movies.errors['not_gt_size'], 0),
-    ('trek', 1, 10, 200, [Movies.expected_short()[0]], 1),
-    ('Star', 1, 10, 200, Movies.expected_short(), 1),
-    ('Star', 2, 1, 200, [Movies.expected_short()[1]], 1),
-    ('1337', 1, 1, 200, [], 0),
-    ('13', 0, 1, 422, Movies.errors['not_gt_number'], 0),
-    ('14', 1, 'q', 422, Movies.errors['int_size'], 0),
-    (1337, 1, 1, 200, [], 0)
+    ('Wars', 1, 10, HTTPStatus.OK, [Movies.expected_short()[1]], 1),
+    ('Harrison', 1, -1, HTTPStatus.UNPROCESSABLE_ENTITY, Movies.errors['not_gt_size'], 0),
+    ('trek', 1, 10, HTTPStatus.OK, [Movies.expected_short()[0]], 1),
+    ('Star', 1, 10, HTTPStatus.OK, Movies.expected_short(), 1),
+    ('Star', 2, 1, HTTPStatus.OK, [Movies.expected_short()[1]], 1),
+    ('1337', 1, 1, HTTPStatus.OK, [], 0),
+    ('13', 0, 1, HTTPStatus.UNPROCESSABLE_ENTITY, Movies.errors['not_gt_number'], 0),
+    ('14', 1, 'q', HTTPStatus.UNPROCESSABLE_ENTITY, Movies.errors['int_size'], 0),
+    (1337, 1, 1, HTTPStatus.OK, [], 0)
 ])
 async def test_movies_search(
         fill_db_movies, redis_client: Redis, get_request, query: str | int, page_number: int | str,
@@ -36,7 +37,7 @@ async def test_search_sort(fill_db_movies, get_request, reverse: bool):
     expected = Movies.expected_short()
     expected.sort(reverse=reverse, key=lambda i: i['imdb_rating'])
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert len(response.body) == len(expected)
     assert response.body == expected
 
@@ -47,7 +48,7 @@ async def test_film_sort(fill_db_movies, get_request, reverse: bool):
     expected = Movies.expected_short()
     expected.sort(reverse=reverse, key=lambda i: i['imdb_rating'])
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert len(response.body) == len(expected)
     assert response.body == expected
 
@@ -63,7 +64,7 @@ async def test_film_sort_pagination(fill_db_movies, get_request, page_number: in
     portion = page_size * (page_number - 1)
     expected = expected[portion: portion + page_size]
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert len(response.body) == page_size
     assert response.body == expected
 
@@ -72,7 +73,7 @@ async def test_film_sort_pagination(fill_db_movies, get_request, page_number: in
 async def test_film_filter(fill_db_movies, get_request, genre: list, count: list):
     response = await get_request(f'/films?filter[genre]={genre}')
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert len(response.body) == count
 
 
@@ -81,7 +82,7 @@ async def test_film_id(fill_db_movies, get_request, uuid: str):
     response = await get_request(f'/films/{uuid}')
 
     expected = Movies.expected()
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert len(response.body) == 8
     assert response.body == expected[0]
 
@@ -90,10 +91,10 @@ async def test_film_id(fill_db_movies, get_request, uuid: str):
 async def test_wrong_parameters(fill_db_movies, get_request, page_number: str | int, size: str | int):
     response = await get_request(f'/films?page[number]={page_number}&page[size]={size}')
 
-    assert response.status == 422
+    assert response.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 async def test_wrong_film_id(fill_db_movies, get_request):
     response = await get_request('/films/121212312313134')
 
-    assert response.status == 404
+    assert response.status == HTTPStatus.NOT_FOUND

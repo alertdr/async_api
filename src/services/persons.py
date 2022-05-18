@@ -1,15 +1,13 @@
 import logging
 from functools import lru_cache
 
-from aioredis import Redis
-from elasticsearch import AsyncElasticsearch
 from fastapi import Depends
 
 from db.elastic import get_elastic
 from db.redis import get_redis
 from models.person import Person
 
-from .basic import BaseService
+from .basic import BaseService, AsyncCacheStorage, AsyncFullTextSearch
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +22,7 @@ class PersonService(BaseService):
 
 @lru_cache()
 def get_person_service(
-        redis: Redis = Depends(get_redis),
-        elastic: AsyncElasticsearch = Depends(get_elastic),
+        cache: AsyncCacheStorage = Depends(get_redis),
+        searcher: AsyncFullTextSearch = Depends(get_elastic),
 ) -> PersonService:
-    return PersonService(redis, elastic)
+    return PersonService(cache, searcher)

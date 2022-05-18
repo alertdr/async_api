@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 import pytest
 from elasticsearch import AsyncElasticsearch
 from redis import Redis
@@ -18,7 +20,7 @@ async def test_genres_sort_pagination(fill_db_genres, get_request, reverse: bool
     portion = page_size * (page_number - 1)
     expected = expected[portion: portion + page_size]
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert len(response.body) == len(expected)
     assert response.body == expected
 
@@ -28,7 +30,7 @@ async def test_film_id(fill_db_genres, get_request, uuid: str):
     response = await get_request(f'/genres/{uuid}')
     expected = Genres.expected.copy()
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert len(response.body) == 2
     assert response.body in expected
 
@@ -37,13 +39,13 @@ async def test_film_id(fill_db_genres, get_request, uuid: str):
 async def test_wrong_parameters(fill_db_genres, get_request, page_number: str | int, size: str | int):
     response = await get_request(f'/genres?page[number]={page_number}&page[size]={size}')
 
-    assert response.status == 422
+    assert response.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 async def test_wrong_genre_id(fill_db_genres, get_request):
     response = await get_request('/genres/121212312313134')
 
-    assert response.status == 404
+    assert response.status == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.parametrize('uuid', [Genres.data[0]['id']])
@@ -54,17 +56,17 @@ async def test_redis(fill_db_genres, redis_client: Redis, es_client: AsyncElasti
 
     response = await get_request(f'/genres/{uuid}')
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert await redis_client.dbsize() == 1
 
     await es_client.update('genres', uuid, body={'doc': {'name': 'Some words...'}}, refresh=True)
     response = await get_request(f'/genres/{uuid}')
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert response.body == expected
 
     await redis_client.flushdb(asynchronous=True)
 
     response = await get_request(f'/genres/{uuid}')
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert response.body['name'] == 'Some words...'

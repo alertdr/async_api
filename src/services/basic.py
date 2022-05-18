@@ -1,8 +1,7 @@
 import json
 import logging
+from abc import ABC, abstractmethod
 
-from aioredis import Redis
-from elasticsearch import AsyncElasticsearch
 from orjson import dumps, loads
 
 from models.base_models import BaseApiConfig
@@ -13,29 +12,45 @@ PAGE_SIZE = 10
 logger = logging.getLogger(__name__)
 
 
+class AsyncCacheStorage(ABC):
+    @abstractmethod
+    async def get(self, key: str, **kwargs):
+        pass
+
+    @abstractmethod
+    async def set(self, key: str, value: str, expire: int, **kwargs):
+        pass
+
+
+class AsyncFullTextSearch(ABC):
+    @abstractmethod
+    async def search(self, *args, **kwargs):
+        pass
+
+
 class BaseService:
     index = ''
     kwargs: dict = {}
     response_model = BaseApiConfig
     search_fields = []
 
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
-        self.redis = redis
-        self.elastic = elastic
+    def __init__(self, cache: AsyncCacheStorage, searcher: AsyncFullTextSearch):
+        self.cache = cache
+        self.searcher = searcher
 
     async def _put_to_cache(self, obj: BaseApiConfig | list[BaseApiConfig]) -> None:
         if isinstance(obj, list):
             raw = dumps([item.json() for item in obj])
         else:
             raw = obj.json()
-        key = self.create_redis_key()
+        key = self.create_cache_key()
         logger.debug('Put to cache with key=%s', key)
-        await self.redis.set(key, raw, ex=FILM_CACHE_EXPIRE_IN_SECONDS)
+        await self.cache.set(key, raw, ex=FILM_CACHE_EXPIRE_IN_SECONDS)
 
     async def _get_from_cache(self) -> BaseApiConfig | list[BaseApiConfig] | None:
-        key = self.create_redis_key()
+        key = self.create_cache_key()
         logger.debug('Looking in cache with key=%s', key)
-        data = await self.redis.get(key)
+        data = await self.cache.get(key)
         if not data:
             logger.info('Cached not found, go to elastic')
             return None
@@ -45,12 +60,12 @@ class BaseService:
             return [self.response_model.parse_raw(item) for item in obj]
         return self.response_model.parse_raw(data)
 
-    def create_redis_key(self) -> str:
+    def create_cache_key(self) -> str:
         key: str = f'{self.index}::'
         return key + json.dumps(self.kwargs)
 
     async def _get_from_elastic(self, body) -> list[BaseApiConfig] | BaseApiConfig | None:
-        result = await self.elastic.search(index=self.index, body=body)
+        result = await self.searcher.search(index=self.index, body=body)
         docs = result['hits']['hits']
         match result['hits']['total']['value']:
             case 0:
@@ -66,23 +81,23 @@ class BaseService:
     async def get_by_id(self, item_id: str) -> BaseApiConfig | None:
         self.kwargs = {'item_id': item_id}
         if obj := await self._get_from_cache():
-            return obj                                                      # type: ignore
+            return obj  # type: ignore
         body = {'query': {'match': {'id': item_id}}}
         if obj := await self._get_from_elastic(body):
             await self._put_to_cache(obj)
-            return obj                                                      # type: ignore
+            return obj  # type: ignore
         return None
 
     async def get_list(self, **kwargs) -> list[BaseApiConfig]:
         self.kwargs = kwargs
         body = self._body_formation()
         if objs := await self._get_from_cache():
-            pass                                                     # type: ignore
+            pass  # type: ignore
         elif objs := await self._get_from_elastic(body):
             await self._put_to_cache(objs)
         if objs:
             return objs if isinstance(objs, list) else [objs]
-        return []                                        # type: ignore
+        return []  # type: ignore
 
     def _filter_query(self, filter: dict) -> dict:
         """
