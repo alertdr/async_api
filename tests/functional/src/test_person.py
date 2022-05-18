@@ -1,4 +1,4 @@
-from typing import Any
+from http import HTTPStatus
 
 import pytest
 from aioredis import Redis
@@ -11,15 +11,15 @@ pytestmark = pytest.mark.asyncio
 
 
 @pytest.mark.parametrize('query, page_number, page_size, expected_status, expected_body, cache_size', [
-    ('Harrison', 1, 10, 200, [Persons.expected[1]], 1),
-    ('Harrison', 1, -1, 422, Persons.errors['not_gt_size'], 0),
-    ('Harrison Fart', 1, 10, 200, [Persons.expected[1]], 1),
-    ('Immanuel Cant', 1, 10, 200, [Persons.expected[2], Persons.expected[3]], 1),
-    ('Immanuel Cont', 2, 1, 200, [Persons.expected[3]], 1),
-    ('1337', 1, 1, 200, [], 0),
-    ('13', 0, 1, 422, Persons.errors['not_gt_number'], 0),
-    ('14', 1, 'q', 422, Persons.errors['int_size'], 0),
-    (1337, 1, 1, 200, [], 0)
+    ('Harrison', 1, 10, HTTPStatus.OK, [Persons.expected[1]], 1),
+    ('Harrison', 1, -1, HTTPStatus.UNPROCESSABLE_ENTITY, Persons.errors['not_gt_size'], 0),
+    ('Harrison Fart', 1, 10, HTTPStatus.OK, [Persons.expected[1]], 1),
+    ('Immanuel Cant', 1, 10, HTTPStatus.OK, [Persons.expected[2], Persons.expected[3]], 1),
+    ('Immanuel Cont', 2, 1, HTTPStatus.OK, [Persons.expected[3]], 1),
+    ('1337', 1, 1, HTTPStatus.OK, [], 0),
+    ('13', 0, 1, HTTPStatus.UNPROCESSABLE_ENTITY, Persons.errors['not_gt_number'], 0),
+    ('14', 1, 'q', HTTPStatus.UNPROCESSABLE_ENTITY, Persons.errors['int_size'], 0),
+    (1337, 1, 1, HTTPStatus.OK, [], 0)
 ])
 async def test_person_search(
         fill_db_persons, redis_client: Redis, get_request, query: str | int, page_number: int | str,
@@ -37,7 +37,7 @@ async def test_get_film_by_person(fill_db_persons, fill_db_movies, get_request, 
     response = await get_request(f'/persons/{uuid}/film/')
     expected = Movies.expected_short()
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     for film in response.body:
         assert film in expected
 
@@ -50,7 +50,7 @@ async def test_persons_pagination(fill_db_persons, get_request, page_number: int
     portion = page_size * (page_number - 1)
     expected = expected[portion: portion + page_size]
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert len(response.body) == len(expected)
     assert response.body == expected
 
@@ -59,7 +59,7 @@ async def test_persons_pagination(fill_db_persons, get_request, page_number: int
 async def test_person_id(fill_db_persons, get_request, uuid: str):
     response = await get_request(f'/persons/{uuid}')
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert len(response.body) == 6
     assert response.body in Persons.expected.copy()
 
@@ -68,13 +68,13 @@ async def test_person_id(fill_db_persons, get_request, uuid: str):
 async def test_wrong_parameters(fill_db_persons, get_request, page_number: int | str, size: int | str):
     response = await get_request(f'/persons?page[number]={page_number}&page[size]={size}')
 
-    assert response.status == 422
+    assert response.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 async def test_wrong_person_id(fill_db_persons, get_request):
     response = await get_request('/persons/1337')
 
-    assert response.status == 404
+    assert response.status == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.parametrize('uuid', [Persons.data[0]['id']])
@@ -85,17 +85,17 @@ async def test_redis(fill_db_persons, redis_client: Redis, es_client: AsyncElast
 
     response = await get_request(f'/persons/{uuid}')
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert await redis_client.dbsize() == 1
 
     await es_client.update('persons', uuid, body={'doc': {'name': 'abc'}}, refresh=True)
     response = await get_request(f'/persons/{uuid}')
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert response.body == expected
 
     await redis_client.flushdb(asynchronous=True)
     response = await get_request(f'/persons/{uuid}')
 
-    assert response.status == 200
+    assert response.status == HTTPStatus.OK
     assert response.body['full_name'] == 'abc'
